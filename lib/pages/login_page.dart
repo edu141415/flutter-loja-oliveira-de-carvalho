@@ -37,7 +37,9 @@ class _LoginPageState extends State<LoginPage> {
         const SnackBar(content: Text('Login realizado com sucesso')),
       );
 
-      Navigator.pop(context);
+      // ❌ NÃO navegar manualmente
+      // ✅ AuthGate cuidará da navegação automaticamente
+
     } on AuthException catch (e) {
       String mensagem = 'Erro ao fazer login';
 
@@ -50,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(mensagem)),
       );
-    } catch (e) {
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erro inesperado')),
       );
@@ -123,7 +125,11 @@ class _LoginPageState extends State<LoginPage> {
                     child: ElevatedButton(
                       onPressed: carregando ? null : fazerLogin,
                       child: carregando
-                          ? const CircularProgressIndicator()
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : const Text('Entrar'),
                     ),
                   ),
