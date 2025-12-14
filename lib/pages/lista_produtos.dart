@@ -8,9 +8,7 @@ import '../widgets/produto_card.dart';
 class ListaProdutos extends StatelessWidget {
   ListaProdutos({super.key});
 
-  // 🎨 Cores padrão
   final Color azulPrincipal = const Color(0xFF0B3C6F);
-  final Color azulEscuro = const Color(0xFF0A2F57);
 
   final List<Produto> produtos = [
     Produto(
@@ -20,7 +18,6 @@ class ListaProdutos extends StatelessWidget {
       descricao: 'Camiseta confortável, tecido leve e ótimo caimento.',
       imagens: [
         'https://res.cloudinary.com/dghjbuuht/image/upload/v1765588098/cld-sample-5.jpg',
-        'https://res.cloudinary.com/dghjbuuht/image/upload/v1765588086/samples/shoe.jpg',
       ],
     ),
     Produto(
@@ -28,77 +25,30 @@ class ListaProdutos extends StatelessWidget {
       nome: 'Tênis',
       preco: 199.90,
       descricao: 'Tênis esportivo ideal para caminhada e uso diário.',
-      imagens: [
-        'https://res.cloudinary.com/dghjbuuht/image/upload/tenis_1.jpg',
-        'https://res.cloudinary.com/dghjbuuht/image/upload/tenis_2.jpg',
-      ],
+      imagens: [],
     ),
     Produto(
       id: '3',
       nome: 'Boné',
       preco: 39.90,
       descricao: 'Boné ajustável com design moderno.',
-      imagens: [
-        'https://res.cloudinary.com/dghjbuuht/image/upload/bone_1.jpg',
-      ],
+      imagens: [],
     ),
   ];
 
   void compartilharProduto(Produto produto) {
     Share.share(
-      '🔥 ${produto.nome}\n💰 R\$ ${produto.preco.toStringAsFixed(2)}\n\nConfira no Loja Demo 👇',
+      '🔥 ${produto.nome}\n'
+      '💰 R\$ ${produto.preco.toStringAsFixed(2)}\n\n'
+      'Confira no app Loja Oliveira de Carvalho 👇',
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: azulPrincipal,
-
-      // ================= MENU LATERAL =================
-      drawer: Drawer(
-        backgroundColor: azulEscuro,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: azulPrincipal),
-              child: const Text(
-                'Menu',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.store, color: Colors.white),
-              title: const Text(
-                'Produtos',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.category, color: Colors.white),
-              title: const Text(
-                'Categorias',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Categorias em breve')),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-
-      // ================= GRID =================
-      body: LayoutBuilder(
+    return Container(
+      color: azulPrincipal,
+      child: LayoutBuilder(
         builder: (context, constraints) {
           int colunas = 2;
           if (constraints.maxWidth > 900) colunas = 4;
