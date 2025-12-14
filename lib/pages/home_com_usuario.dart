@@ -17,35 +17,24 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
   @override
   void initState() {
     super.initState();
-    carregarNomeUsuario();
+    carregarUsuario();
   }
 
-  Future<void> carregarNomeUsuario() async {
+  Future<void> carregarUsuario() async {
     final user = Supabase.instance.client.auth.currentUser;
 
-    if (user == null) {
-      setState(() => carregando = false);
-      return;
-    }
+    if (user == null) return;
 
-    try {
-      final response = await Supabase.instance.client
-          .from('usuarios')
-          .select('nome_completo')
-          .eq('auth_user_id', user.id)
-          .single();
+    final response = await Supabase.instance.client
+        .from('usuarios')
+        .select('nome_completo')
+        .eq('auth_user_id', user.id)
+        .single();
 
-      setState(() {
-        nomeUsuario = response['nome_completo'];
-        carregando = false;
-      });
-    } catch (e) {
-      // fallback seguro
-      setState(() {
-        nomeUsuario = user.email;
-        carregando = false;
-      });
-    }
+    setState(() {
+      nomeUsuario = response['nome_completo'];
+      carregando = false;
+    });
   }
 
   @override
@@ -54,12 +43,17 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
       appBar: AppBar(
         title: const Text('Loja Oliveira de Carvalho'),
         actions: [
-          if (!carregando && nomeUsuario != null)
+          if (carregando)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Center(
                 child: Text(
-                  nomeUsuario!,
+                  nomeUsuario ?? '',
                   style: const TextStyle(fontSize: 14),
                 ),
               ),
