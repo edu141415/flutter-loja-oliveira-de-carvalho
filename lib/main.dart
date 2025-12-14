@@ -9,8 +9,7 @@ Future<void> main() async {
 
   await Supabase.initialize(
     url: 'https://ozxblhonawtqcswwedgb.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96eGJsaG9uYXd0cWNzd3dlZGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2NDYyMTUsImV4cCI6MjA4MTIyMjIxNX0.anCEzANHaefLuD-pCEsrhp2ohOOCv4TuKJSKrbNHdr0',
+    anonKey: 'SUA_ANON_KEY',
   );
 
   runApp(const MyApp());
@@ -33,7 +32,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// 🔐 Decide automaticamente Login ou App
+/// 🔐 Decide Login ou App
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -48,16 +47,13 @@ class AuthGate extends StatelessWidget {
           return const LoginPage();
         }
 
-        // 🔑 força rebuild limpo ao logar/deslogar
-        return HomeComUsuario(
-          key: ValueKey(session.user.id),
-        );
+        return const HomeComUsuario();
       },
     );
   }
 }
 
-/// 🏠 Tela principal com usuário logado (nome vindo do banco)
+/// 🏠 Home com nome do usuário
 class HomeComUsuario extends StatefulWidget {
   const HomeComUsuario({super.key});
 
@@ -66,40 +62,27 @@ class HomeComUsuario extends StatefulWidget {
 }
 
 class _HomeComUsuarioState extends State<HomeComUsuario> {
-  String? nomeUsuario;
-  bool carregando = true;
+  String nomeUsuario = 'Carregando...';
 
   @override
   void initState() {
     super.initState();
-    _carregarNomeUsuario();
+    _buscarNome();
   }
 
-  Future<void> _carregarNomeUsuario() async {
+  Future<void> _buscarNome() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return;
 
-    try {
-      final data = await Supabase.instance.client
-          .from('usuarios')
-          .select('nome_completo')
-          .eq('auth_user_id', user.id)
-          .single();
+    final data = await Supabase.instance.client
+        .from('usuarios')
+        .select('nome_completo')
+        .eq('email', user.email!)
+        .maybeSingle();
 
-      if (!mounted) return;
-
-      setState(() {
-        nomeUsuario = data['nome_completo'];
-        carregando = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-
-      setState(() {
-        nomeUsuario = 'Usuário';
-        carregando = false;
-      });
-    }
+    setState(() {
+      nomeUsuario = data?['nome_completo'] ?? 'Usuário';
+    });
   }
 
   @override
@@ -111,16 +94,10 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Center(
-              child: carregando
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      nomeUsuario ?? '',
-                      style: const TextStyle(fontSize: 14),
-                    ),
+              child: Text(
+                nomeUsuario,
+                style: const TextStyle(fontSize: 14),
+              ),
             ),
           ),
           IconButton(
