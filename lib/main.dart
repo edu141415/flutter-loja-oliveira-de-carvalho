@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Loja Demo',
+      title: 'Loja Oliveira de Carvalho',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -48,13 +48,16 @@ class AuthGate extends StatelessWidget {
           return const LoginPage();
         }
 
-        return const HomeComUsuario();
+        // 🔑 força rebuild limpo ao logar/deslogar
+        return HomeComUsuario(
+          key: ValueKey(session.user.id),
+        );
       },
     );
   }
 }
 
-/// 🏠 Tela principal com usuário logado
+/// 🏠 Tela principal com usuário logado (nome vindo do banco)
 class HomeComUsuario extends StatefulWidget {
   const HomeComUsuario({super.key});
 
@@ -74,24 +77,26 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
 
   Future<void> _carregarNomeUsuario() async {
     final user = Supabase.instance.client.auth.currentUser;
-
     if (user == null) return;
 
     try {
-      final response = await Supabase.instance.client
+      final data = await Supabase.instance.client
           .from('usuarios')
           .select('nome_completo')
           .eq('auth_user_id', user.id)
           .single();
 
+      if (!mounted) return;
+
       setState(() {
-        nomeUsuario = response['nome_completo'];
+        nomeUsuario = data['nome_completo'];
         carregando = false;
       });
-    } catch (e) {
-      // fallback seguro
+    } catch (_) {
+      if (!mounted) return;
+
       setState(() {
-        nomeUsuario = user.email;
+        nomeUsuario = 'Usuário';
         carregando = false;
       });
     }
@@ -103,27 +108,21 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
       appBar: AppBar(
         title: const Text('Loja Oliveira de Carvalho'),
         actions: [
-          if (carregando)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Center(
-                child: SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          else if (nomeUsuario != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Center(
-                child: Text(
-                  nomeUsuario!,
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Center(
+              child: carregando
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      nomeUsuario ?? '',
+                      style: const TextStyle(fontSize: 14),
+                    ),
             ),
+          ),
           IconButton(
             tooltip: 'Sair',
             icon: const Icon(Icons.logout),

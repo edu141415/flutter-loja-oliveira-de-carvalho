@@ -17,10 +17,10 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
   @override
   void initState() {
     super.initState();
-    carregarUsuario();
+    carregarNomeUsuario();
   }
 
-  Future<void> carregarUsuario() async {
+  Future<void> carregarNomeUsuario() async {
     final user = Supabase.instance.client.auth.currentUser;
 
     if (user == null) return;
@@ -46,7 +46,7 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
           if (carregando)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             )
           else
             Padding(
