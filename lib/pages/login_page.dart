@@ -15,8 +15,16 @@ class _LoginPageState extends State<LoginPage> {
 
   bool carregando = false;
 
+  @override
+  void dispose() {
+    emailController.dispose();
+    senhaController.dispose();
+    super.dispose();
+  }
+
   Future<void> fazerLogin() async {
-    if (emailController.text.isEmpty || senhaController.text.isEmpty) {
+    if (emailController.text.trim().isEmpty ||
+        senhaController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Preencha email e senha')),
       );
@@ -26,10 +34,16 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => carregando = true);
 
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
+      final response =
+          await Supabase.instance.client.auth.signInWithPassword(
         email: emailController.text.trim(),
         password: senhaController.text.trim(),
       );
+
+      // ⚠️ Se não veio sessão, algo deu errado
+      if (response.session == null) {
+        throw const AuthException('Sessão não criada');
+      }
 
       if (!mounted) return;
 
@@ -37,25 +51,31 @@ class _LoginPageState extends State<LoginPage> {
         const SnackBar(content: Text('Login realizado com sucesso')),
       );
 
-      // ❌ NÃO navegar manualmente
-      // ✅ AuthGate cuidará da navegação automaticamente
+      // ❌ NÃO navegar
+      // ✅ AuthGate reage automaticamente
 
     } on AuthException catch (e) {
-      String mensagem = 'Erro ao fazer login';
+      String mensagem;
 
-      if (e.message.contains('Invalid login credentials')) {
+      if (e.message.toLowerCase().contains('invalid login credentials')) {
         mensagem = 'Email ou senha inválidos';
-      } else if (e.message.contains('Email not confirmed')) {
-        mensagem = 'Email ainda não confirmado. Verifique sua caixa de entrada.';
+      } else if (e.message.toLowerCase().contains('email not confirmed')) {
+        mensagem = 'Email ainda não confirmado';
+      } else {
+        mensagem = 'Erro ao fazer login: ${e.message}';
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mensagem)),
-      );
-    } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro inesperado')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(mensagem)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro inesperado: $e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => carregando = false);
     }
@@ -91,6 +111,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   TextField(
                     controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
                       labelText: 'Email',
                       prefixIcon: Icon(Icons.email),
