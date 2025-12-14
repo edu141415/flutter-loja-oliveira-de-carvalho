@@ -25094,7 +25094,7 @@ var $async$auC=A.C(function(a,b){if(a===1)return A.y(b,r)
 for(;;)switch(s){case 0:if($.Y==null)A.ax4()
 $.Y.toString
 s=2
-return A.w(A.ahp("SUA_ANON_KEY","https://ozxblhonawtqcswwedgb.supabase.co"),$async$auC)
+return A.w(A.ahp("sb_publishable_b33ZAdphUoF1VYvV3YGRsw_hmPK3Eg7","https://ozxblhonawtqcswwedgb.supabase.co"),$async$auC)
 case 2:if($.Y==null)A.ax4()
 q=$.Y
 q.toString
