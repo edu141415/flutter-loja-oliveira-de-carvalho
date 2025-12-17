@@ -12,7 +12,7 @@ class HomeComUsuario extends StatefulWidget {
 }
 
 class _HomeComUsuarioState extends State<HomeComUsuario> {
-  String nomeUsuario = '';
+  String? nomeUsuario;
   bool carregando = true;
   bool isAdmin = false;
 
@@ -33,19 +33,14 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
           .eq('auth_user_id', user.id)
           .single();
 
-      if (!mounted) return;
-
       setState(() {
-        nomeUsuario = response['nome_completo'] ?? 'Usuário';
+        nomeUsuario = response['nome_completo'];
         isAdmin = response['is_admin'] == true;
         carregando = false;
       });
-    } catch (e) {
-      if (!mounted) return;
-
+    } catch (_) {
       setState(() {
         nomeUsuario = 'Usuário';
-        isAdmin = false;
         carregando = false;
       });
     }
@@ -54,8 +49,25 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Drawer só para admin
+      drawer: isAdmin ? const AdminDrawer() : null,
+
       appBar: AppBar(
         title: const Text('Loja Oliveira de Carvalho'),
+
+        // ☰ BOTÃO DO MENU (necessário no Web)
+        leading: isAdmin
+            ? Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.menu),
+                  tooltip: 'Menu administrativo',
+                  onPressed: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                ),
+              )
+            : null,
+
         actions: [
           if (carregando)
             const Padding(
@@ -73,7 +85,7 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Center(
                 child: Text(
-                  nomeUsuario,
+                  nomeUsuario ?? '',
                   style: const TextStyle(fontSize: 14),
                 ),
               ),
@@ -83,15 +95,12 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await Supabase.instance.client.auth.signOut();
-              // AuthGate reage automaticamente
             },
           ),
         ],
       ),
 
-      // 🛠 Drawer aparece apenas para administradores
-      drawer: isAdmin ? const AdminDrawer() : null,
-
+      // ❗ REMOVIDO O CONST AQUI
       body: ListaProdutos(),
     );
   }
