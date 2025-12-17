@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'lista_produtos.dart';
+import '../widgets/admin_drawer.dart';
 
 class HomeComUsuario extends StatefulWidget {
   const HomeComUsuario({super.key});
@@ -11,30 +12,43 @@ class HomeComUsuario extends StatefulWidget {
 }
 
 class _HomeComUsuarioState extends State<HomeComUsuario> {
-  String? nomeUsuario;
+  String nomeUsuario = '';
   bool carregando = true;
+  bool isAdmin = false;
 
   @override
   void initState() {
     super.initState();
-    carregarNomeUsuario();
+    carregarDadosUsuario();
   }
 
-  Future<void> carregarNomeUsuario() async {
+  Future<void> carregarDadosUsuario() async {
     final user = Supabase.instance.client.auth.currentUser;
-
     if (user == null) return;
 
-    final response = await Supabase.instance.client
-        .from('usuarios')
-        .select('nome_completo')
-        .eq('auth_user_id', user.id)
-        .single();
+    try {
+      final response = await Supabase.instance.client
+          .from('usuarios')
+          .select('nome_completo, is_admin')
+          .eq('auth_user_id', user.id)
+          .single();
 
-    setState(() {
-      nomeUsuario = response['nome_completo'];
-      carregando = false;
-    });
+      if (!mounted) return;
+
+      setState(() {
+        nomeUsuario = response['nome_completo'] ?? 'Usuário';
+        isAdmin = response['is_admin'] == true;
+        carregando = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        nomeUsuario = 'Usuário';
+        isAdmin = false;
+        carregando = false;
+      });
+    }
   }
 
   @override
@@ -46,14 +60,20 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
           if (carregando)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              child: Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
             )
           else
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Center(
                 child: Text(
-                  nomeUsuario ?? '',
+                  nomeUsuario,
                   style: const TextStyle(fontSize: 14),
                 ),
               ),
@@ -63,10 +83,15 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await Supabase.instance.client.auth.signOut();
+              // AuthGate reage automaticamente
             },
           ),
         ],
       ),
+
+      // 🛠 Drawer aparece apenas para administradores
+      drawer: isAdmin ? const AdminDrawer() : null,
+
       body: ListaProdutos(),
     );
   }
