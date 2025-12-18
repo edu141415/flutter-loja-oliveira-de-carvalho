@@ -12,7 +12,7 @@ class HomeComUsuario extends StatefulWidget {
 }
 
 class _HomeComUsuarioState extends State<HomeComUsuario> {
-  String? nomeUsuario;
+  String nomeUsuario = '';
   bool carregando = true;
   bool isAdmin = false;
 
@@ -31,16 +31,20 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
           .from('usuarios')
           .select('nome_completo, is_admin')
           .eq('auth_user_id', user.id)
-          .single();
+          .maybeSingle();
+
+      if (!mounted) return;
 
       setState(() {
-        nomeUsuario = response['nome_completo'];
-        isAdmin = response['is_admin'] == true;
+        nomeUsuario = response?['nome_completo'] ?? 'Usuário';
+        isAdmin = response?['is_admin'] == true;
         carregando = false;
       });
-    } catch (_) {
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
         nomeUsuario = 'Usuário';
+        isAdmin = false;
         carregando = false;
       });
     }
@@ -49,21 +53,18 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Drawer só para admin
       drawer: isAdmin ? const AdminDrawer() : null,
 
       appBar: AppBar(
         title: const Text('Loja Oliveira de Carvalho'),
 
-        // ☰ BOTÃO DO MENU (necessário no Web)
+        // BOTÃO DO MENU (OBRIGATÓRIO NO WEB)
         leading: isAdmin
             ? Builder(
                 builder: (context) => IconButton(
                   icon: const Icon(Icons.menu),
                   tooltip: 'Menu administrativo',
-                  onPressed: () {
-                    Scaffold.of(context).openDrawer();
-                  },
+                  onPressed: () => Scaffold.of(context).openDrawer(),
                 ),
               )
             : null,
@@ -72,12 +73,10 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
           if (carregando)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Center(
-                child: SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
               ),
             )
           else
@@ -85,7 +84,7 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Center(
                 child: Text(
-                  nomeUsuario ?? '',
+                  nomeUsuario,
                   style: const TextStyle(fontSize: 14),
                 ),
               ),
@@ -100,7 +99,6 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
         ],
       ),
 
-      // ❗ REMOVIDO O CONST AQUI
       body: ListaProdutos(),
     );
   }
