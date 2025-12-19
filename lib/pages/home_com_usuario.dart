@@ -12,7 +12,7 @@ class HomeComUsuario extends StatefulWidget {
 }
 
 class _HomeComUsuarioState extends State<HomeComUsuario> {
-  String nomeUsuario = '';
+  String? nomeUsuario;
   bool carregando = true;
   bool isAdmin = false;
 
@@ -31,20 +31,28 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
           .from('usuarios')
           .select('nome_completo, is_admin')
           .eq('auth_user_id', user.id)
-          .maybeSingle();
+          .single();
 
-      if (!mounted) return;
+      final rawIsAdmin = response['is_admin'];
+
+      // 🔎 DEBUG (aparece no console / Vercel logs)
+      debugPrint('IS_ADMIN RAW => $rawIsAdmin (${rawIsAdmin.runtimeType})');
 
       setState(() {
-        nomeUsuario = response?['nome_completo'] ?? 'Usuário';
-        isAdmin = response?['is_admin'] == true;
+        nomeUsuario = response['nome_completo'];
+
+        // ✅ CONVERSÃO SEGURA
+        isAdmin = rawIsAdmin == true ||
+            rawIsAdmin == 1 ||
+            rawIsAdmin == 'true';
+
         carregando = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      debugPrint('Erro ao carregar usuário: $e');
+
       setState(() {
         nomeUsuario = 'Usuário';
-        isAdmin = false;
         carregando = false;
       });
     }
@@ -58,13 +66,15 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
       appBar: AppBar(
         title: const Text('Loja Oliveira de Carvalho'),
 
-        // BOTÃO DO MENU (OBRIGATÓRIO NO WEB)
+        // ☰ MENU ADMIN (WEB PRECISA DISSO)
         leading: isAdmin
             ? Builder(
                 builder: (context) => IconButton(
                   icon: const Icon(Icons.menu),
                   tooltip: 'Menu administrativo',
-                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  onPressed: () {
+                    Scaffold.of(context).openDrawer();
+                  },
                 ),
               )
             : null,
@@ -82,11 +92,9 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
           else
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Center(
-                child: Text(
-                  nomeUsuario,
-                  style: const TextStyle(fontSize: 14),
-                ),
+              child: Text(
+                nomeUsuario ?? '',
+                style: const TextStyle(fontSize: 14),
               ),
             ),
           IconButton(
