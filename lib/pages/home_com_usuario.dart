@@ -12,7 +12,7 @@ class HomeComUsuario extends StatefulWidget {
 }
 
 class _HomeComUsuarioState extends State<HomeComUsuario> {
-  String? nomeUsuario;
+  String nomeUsuario = 'Usuário';
   bool carregando = true;
 
   @override
@@ -23,7 +23,11 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
 
   Future<void> carregarDadosUsuario() async {
     final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+
+    if (user == null) {
+      setState(() => carregando = false);
+      return;
+    }
 
     try {
       final response = await Supabase.instance.client
@@ -33,28 +37,25 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
           .single();
 
       setState(() {
-        nomeUsuario = response['nome_completo'];
+        nomeUsuario = response['nome_completo'] ?? 'Usuário';
         carregando = false;
       });
     } catch (e) {
       debugPrint('Erro ao carregar usuário: $e');
-      setState(() {
-        nomeUsuario = 'Usuário';
-        carregando = false;
-      });
+      setState(() => carregando = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 🔴 DRAWER SEM CONDIÇÃO
+      // 🔥 DRAWER SEM CONDIÇÃO (FORÇADO)
       drawer: const AdminDrawer(),
 
       appBar: AppBar(
         title: const Text('Loja Oliveira de Carvalho'),
 
-        // 🔴 BOTÃO ☰ SEM CONDIÇÃO
+        // 🔥 BOTÃO ☰ SEM CONDIÇÃO
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -79,7 +80,7 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(
-                nomeUsuario ?? '',
+                nomeUsuario,
                 style: const TextStyle(fontSize: 14),
               ),
             ),
