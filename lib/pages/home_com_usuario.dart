@@ -14,7 +14,6 @@ class HomeComUsuario extends StatefulWidget {
 class _HomeComUsuarioState extends State<HomeComUsuario> {
   String? nomeUsuario;
   bool carregando = true;
-  bool isAdmin = false;
 
   @override
   void initState() {
@@ -29,22 +28,12 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
     try {
       final response = await Supabase.instance.client
           .from('usuarios')
-          .select('nome_completo, is_admin')
+          .select('nome_completo')
           .eq('auth_user_id', user.id)
           .single();
 
-      final rawIsAdmin = response['is_admin'];
-
-      debugPrint('IS_ADMIN RAW => $rawIsAdmin (${rawIsAdmin.runtimeType})');
-
       setState(() {
         nomeUsuario = response['nome_completo'];
-
-        // conversão robusta
-        isAdmin = rawIsAdmin == true ||
-            rawIsAdmin == 1 ||
-            rawIsAdmin == 'true';
-
         carregando = false;
       });
     } catch (e) {
@@ -59,23 +48,22 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: isAdmin ? const AdminDrawer() : null,
+      // 🔴 DRAWER SEM CONDIÇÃO
+      drawer: const AdminDrawer(),
 
       appBar: AppBar(
         title: const Text('Loja Oliveira de Carvalho'),
 
-        // ☰ BOTÃO DO MENU (OBRIGATÓRIO NO WEB)
-        leading: isAdmin
-            ? Builder(
-                builder: (context) => IconButton(
-                  icon: const Icon(Icons.menu),
-                  tooltip: 'Menu administrativo',
-                  onPressed: () {
-                    Scaffold.of(context).openDrawer();
-                  },
-                ),
-              )
-            : null,
+        // 🔴 BOTÃO ☰ SEM CONDIÇÃO
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            tooltip: 'Menu',
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
 
         actions: [
           if (carregando)
