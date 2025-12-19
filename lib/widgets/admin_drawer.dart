@@ -22,7 +22,7 @@ class AdminDrawer extends StatelessWidget {
             ),
             accountEmail: Text(user?.email ?? ''),
             currentAccountPicture: const CircleAvatar(
-              child: Icon(Icons.menu, size: 32),
+              child: Icon(Icons.admin_panel_settings, size: 32),
             ),
           ),
 
@@ -39,7 +39,7 @@ class AdminDrawer extends StatelessWidget {
 
           ListTile(
             leading: const Icon(Icons.add_box),
-            title: const Text('Produtos'),
+            title: const Text('Anunciar produto'),
             onTap: () {
               Navigator.pushReplacement(
                 context,
@@ -60,6 +60,7 @@ class AdminDrawer extends StatelessWidget {
           ),
 
           const Spacer(),
+
           const Divider(),
 
           ListTile(
@@ -67,9 +68,7 @@ class AdminDrawer extends StatelessWidget {
             title: const Text('Sair'),
             onTap: () async {
               await Supabase.instance.client.auth.signOut();
-              if (context.mounted) {
-                Navigator.pop(context);
-              }
+              if (context.mounted) Navigator.pop(context);
             },
           ),
         ],
