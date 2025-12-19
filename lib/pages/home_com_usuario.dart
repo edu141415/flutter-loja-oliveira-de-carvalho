@@ -35,13 +35,12 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
 
       final rawIsAdmin = response['is_admin'];
 
-      // 🔎 DEBUG (aparece no console / Vercel logs)
       debugPrint('IS_ADMIN RAW => $rawIsAdmin (${rawIsAdmin.runtimeType})');
 
       setState(() {
         nomeUsuario = response['nome_completo'];
 
-        // ✅ CONVERSÃO SEGURA
+        // conversão robusta
         isAdmin = rawIsAdmin == true ||
             rawIsAdmin == 1 ||
             rawIsAdmin == 'true';
@@ -50,7 +49,6 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
       });
     } catch (e) {
       debugPrint('Erro ao carregar usuário: $e');
-
       setState(() {
         nomeUsuario = 'Usuário';
         carregando = false;
@@ -66,7 +64,7 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
       appBar: AppBar(
         title: const Text('Loja Oliveira de Carvalho'),
 
-        // ☰ MENU ADMIN (WEB PRECISA DISSO)
+        // ☰ BOTÃO DO MENU (OBRIGATÓRIO NO WEB)
         leading: isAdmin
             ? Builder(
                 builder: (context) => IconButton(
