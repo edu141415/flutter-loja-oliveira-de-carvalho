@@ -12,7 +12,7 @@ class HomeComUsuario extends StatefulWidget {
 }
 
 class _HomeComUsuarioState extends State<HomeComUsuario> {
-  String? nomeUsuario;
+  String nomeUsuario = 'Usuário';
   bool carregando = true;
 
   @override
@@ -23,46 +23,46 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
 
   Future<void> carregarDadosUsuario() async {
     final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+
+    if (user == null) {
+      setState(() => carregando = false);
+      return;
+    }
 
     try {
       final response = await Supabase.instance.client
           .from('usuarios')
           .select('nome_completo')
           .eq('auth_user_id', user.id)
-          .single();
+          .maybeSingle();
 
       setState(() {
-        nomeUsuario = response['nome_completo'];
+        nomeUsuario = response?['nome_completo'] ?? 'Usuário';
         carregando = false;
       });
     } catch (e) {
       debugPrint('Erro ao carregar usuário: $e');
-      setState(() {
-        nomeUsuario = 'Usuário';
-        carregando = false;
-      });
+      setState(() => carregando = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 🔥 DRAWER SEM CONDIÇÃO (FORÇADO)
+      // 🔴 DRAWER SEM QUALQUER CONDIÇÃO
       drawer: const AdminDrawer(),
 
       appBar: AppBar(
+        automaticallyImplyLeading: false, // 🔴 IMPORTANTE NO WEB
         title: const Text('Loja Oliveira de Carvalho'),
 
-        // 🔥 BOTÃO ☰ FORÇADO (ESSENCIAL NO WEB)
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            tooltip: 'Menu',
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
+        // 🔴 BOTÃO DE MENU FORÇADO
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          tooltip: 'Abrir menu',
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
         ),
 
         actions: [
@@ -78,9 +78,11 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
           else
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                nomeUsuario ?? '',
-                style: const TextStyle(fontSize: 14),
+              child: Center(
+                child: Text(
+                  nomeUsuario,
+                  style: const TextStyle(fontSize: 14),
+                ),
               ),
             ),
           IconButton(
