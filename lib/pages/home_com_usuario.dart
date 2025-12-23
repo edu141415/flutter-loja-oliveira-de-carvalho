@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'lista_produtos.dart';
-import '../widgets/admin_drawer.dart';
+
+// páginas admin
+import '../pages/admin/admin_home_page.dart';
+import '../pages/admin/admin_produto_page.dart';
+import '../pages/admin/admin_usuarios_page.dart';
 
 class HomeComUsuario extends StatefulWidget {
   const HomeComUsuario({super.key});
@@ -12,7 +16,7 @@ class HomeComUsuario extends StatefulWidget {
 }
 
 class _HomeComUsuarioState extends State<HomeComUsuario> {
-  String nomeUsuario = 'Usuário';
+  String? nomeUsuario;
   bool carregando = true;
 
   @override
@@ -23,52 +27,89 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
 
   Future<void> carregarDadosUsuario() async {
     final user = Supabase.instance.client.auth.currentUser;
-
-    if (user == null) {
-      setState(() => carregando = false);
-      return;
-    }
+    if (user == null) return;
 
     try {
       final response = await Supabase.instance.client
           .from('usuarios')
           .select('nome_completo')
           .eq('auth_user_id', user.id)
-          .maybeSingle();
+          .single();
 
       setState(() {
-        nomeUsuario = response?['nome_completo'] ?? 'Usuário';
+        nomeUsuario = response['nome_completo'];
         carregando = false;
       });
-    } catch (e) {
-      debugPrint('Erro ao carregar usuário: $e');
-      setState(() => carregando = false);
+    } catch (_) {
+      setState(() {
+        nomeUsuario = 'Usuário';
+        carregando = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 🔴 DRAWER SEM QUALQUER CONDIÇÃO
-      drawer: const AdminDrawer(),
-
       appBar: AppBar(
-        automaticallyImplyLeading: false, // 🔴 IMPORTANTE NO WEB
         title: const Text('Loja Oliveira de Carvalho'),
 
-        // 🔴 BOTÃO DE MENU FORÇADO
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          tooltip: 'Abrir menu',
-          onPressed: () {
-            Scaffold.of(context).openDrawer();
-          },
-        ),
-
         actions: [
+          // 🔹 MENU ADMIN FUNCIONAL NO WEB
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              switch (value) {
+                case 'painel':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => AdminHomePage()),
+                  );
+                  break;
+
+                case 'produto':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => AdminProdutoPage()),
+                  );
+                  break;
+
+                case 'usuarios':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => AdminUsuariosPage()),
+                  );
+                  break;
+
+                case 'logout':
+                  Supabase.instance.client.auth.signOut();
+                  break;
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'painel',
+                child: Text('Painel administrativo'),
+              ),
+              PopupMenuItem(
+                value: 'produto',
+                child: Text('Anunciar produto'),
+              ),
+              PopupMenuItem(
+                value: 'usuarios',
+                child: Text('Usuários'),
+              ),
+              PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'logout',
+                child: Text('Sair'),
+              ),
+            ],
+          ),
+
           if (carregando)
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: 12),
               child: SizedBox(
                 width: 16,
                 height: 16,
@@ -80,18 +121,11 @@ class _HomeComUsuarioState extends State<HomeComUsuario> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Center(
                 child: Text(
-                  nomeUsuario,
+                  nomeUsuario ?? '',
                   style: const TextStyle(fontSize: 14),
                 ),
               ),
             ),
-          IconButton(
-            tooltip: 'Sair',
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await Supabase.instance.client.auth.signOut();
-            },
-          ),
         ],
       ),
 
